@@ -12,7 +12,7 @@ const server = http.createServer(app);
 // to communicate with our server (running on localhost:4000)
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000", // Allow our React client
+    origin: process.env.CLIENT_ORIGIN || "http://localhost:3000", // Allow our React client
     methods: ["GET", "POST"]
   }
 });

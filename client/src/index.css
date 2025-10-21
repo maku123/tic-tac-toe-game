@@ -60,3 +60,9 @@ h1 {
 .square:hover {
   background: #4a4f5a;
 }
+
+.status {
+  margin-bottom: 10px;
+  font-size: 24px;
+  font-weight: bold;
+}

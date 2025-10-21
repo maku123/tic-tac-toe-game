@@ -137,3 +137,83 @@ h1 {
   font-weight: 300;
   color: #ccc;
 }
+
+/* Make the two buttons on the home screen look better */
+.nickname-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 300px;
+}
+
+.leaderboard-button {
+  font-size: 18px;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #61dafb;
+  background-color: transparent;
+  color: #61dafb;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Game Over Screen */
+.game-over-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+.game-over-screen h2 {
+  font-size: 48px;
+  color: #61dafb;
+}
+.game-over-screen button {
+  font-size: 20px;
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  background-color: #61dafb;
+  color: #282c34;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Leaderboard Screen */
+.leaderboard-screen {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+.leaderboard-screen h2 {
+  text-align: center;
+}
+.leaderboard-screen ol {
+  list-style-type: decimal;
+  list-style-position: inside;
+  font-size: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.leaderboard-screen li {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 10px;
+  background-color: #3a3f4a;
+  border-radius: 5px;
+}
+.leaderboard-screen li span:first-child {
+  font-weight: bold;
+}
+.leaderboard-screen button {
+  font-size: 18px;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #61dafb;
+  background-color: transparent;
+  color: #61dafb;
+  cursor: pointer;
+  font-weight: bold;
+}

@@ -1,7 +1,10 @@
 // Import required modules
+require('dotenv').config();
+const cors = require('cors');
 const express = require('express');
 const http = require('http');
 const { Server } = require("socket.io");
+const mongoose = require('mongoose');
 
 // Set up the Express app and HTTP server
 const app = express();
@@ -10,15 +13,46 @@ const server = http.createServer(app);
 // Configure CORS
 // This is necessary to allow our React app (running on localhost:3000)
 // to communicate with our server (running on localhost:4000)
+const allowedOrigins = [
+    "http://localhost:3000",
+    process.env.CLIENT_ORIGIN
+];
+
+app.use(cors({ origin: allowedOrigins }));
+
 const io = new Server(server, {
-  cors: {
-    origin: process.env.CLIENT_ORIGIN || "http://localhost:3000", // Allow our React client
-    methods: ["GET", "POST"]
-  }
+    cors: {
+        origin: function (origin, callback) {
+            // Allow requests with no origin (like mobile apps or curl tests)
+            if (!origin) return callback(null, true);
+            
+            if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+            }
+            return callback(null, true);
+        },
+        methods: ["GET", "POST"]
+    }
 });
 
 // Define the port
 const PORT = 4000;
+
+// --- NEW MONGODB CONNECTION ---
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('Connected to MongoDB Atlas'))
+  .catch((err) => console.error('Error connecting to MongoDB:', err));
+
+// Define the Player Schema
+const playerSchema = new mongoose.Schema({
+  nickname: { type: String, unique: true, required: true },
+  score: { type: Number, default: 0 }
+});
+
+// Create the Player Model
+const Player = mongoose.model('Player', playerSchema);
+// -----------------------------
 
 // --- NEW GAME LOGIC ---
 
@@ -114,7 +148,7 @@ io.on('connection', (socket) => {
   });
 
   // Listen for 'makeMove' event
-  socket.on('makeMove', (data) => {
+  socket.on('makeMove', async(data) => {
     const { gameId, squareIndex, playerSymbol } = data;
     const game = games[gameId];
 
@@ -132,11 +166,37 @@ io.on('connection', (socket) => {
     // Check for a winner
     const winner = calculateWinner(game.board);
     if (winner) {
-      game.winner = winner;
-    }
+        game.winner = winner;
 
-    // Update the turn
-    game.turn = (playerSymbol === 'X') ? 'O' : 'X';
+      // LEADERBOARD LOGIC
+        try {
+            // Find the player in the game object
+            const winningPlayer = game.players.find(p => p.symbol === winner);
+
+            if (winningPlayer) {
+            // Find player in DB and increment their score
+            // 'upsert: true' creates the player if they don't exist
+            await Player.findOneAndUpdate(
+                { nickname: winningPlayer.nickname }, 
+                { $inc: { score: 1 } }, 
+                { upsert: true, new: true }
+            );
+            console.log(`Updated score for ${winningPlayer.nickname}`);
+            }
+        } catch (err) {
+            console.error('Error updating score:', err);
+        }
+    }else if (game.board.every(square => square !== null)) {
+        // HANDLE DRAW 
+        // 'every' checks if all squares are filled
+        game.winner = 'draw';
+        console.log(`Game ${gameId} is a draw.`);
+      
+      } else {
+        // -NO WINNER, NO DRAW - CONTINUE GAME
+        // Update the turn
+        game.turn = (playerSymbol === 'X') ? 'O' : 'X';
+      }
     
     // Broadcast the *new* game state to everyone in the room
     io.to(gameId).emit('updateState', game);
@@ -155,6 +215,21 @@ io.on('connection', (socket) => {
     // TODO: Handle disconnection during an active game
     // (We'll leave this for now to keep it simple)
   });
+});
+
+// --- NEW LEADERBOARD ENDPOINT ---
+app.get('/leaderboard', async (req, res) => {
+    try {
+      // Find top 10 players, sorted by score descending
+      const topPlayers = await Player.find()
+        .sort({ score: -1 })
+        .limit(10);
+  
+      res.json(topPlayers); // Send the players as a JSON response
+    } catch (err) {
+      console.error('Error fetching leaderboard:', err);
+      res.status(500).json({ message: 'Error fetching leaderboard' });
+    }
 });
 
 // Start the server

@@ -3,12 +3,14 @@ import React, { useState, useEffect, useRef } from "react";
 import Board from "./Board";
 import NicknameScreen from './NicknameScreen';
 import WaitingScreen from './WaitingScreen';
+import GameOverScreen from './GameOverScreen';
+import LeaderboardScreen from './LeaderboardScreen';
 
 // Define where our server is running
 const SOCKET_SERVER_URL = process.env.REACT_APP_SOCKET_SERVER_URL || "http://localhost:4000";
 
 function App() {
-  // 'gameState' will be 'nickname', 'waiting', or 'game'
+  // 'gameState' can be 'nickname', 'leaderboard', 'waiting', 'game', 'gameOver'
   const [gameState, setGameState] = useState('nickname');
 
   // Add state to hold the socket object
@@ -65,12 +67,27 @@ function App() {
       setBoard(game.board);
       // Read from the ref, which is always up-to-date
       setIsMyTurn(game.turn === playerSymbolRef.current);
-      setWinner(game.winner);
+      if (game.winner) {
+        setWinner(game.winner);
+        setGameState('gameOver'); // Go to game over screen
+      }
     });
 
     // Clean up the connection when the component unmounts
     return () => newSocket.close();
   }, []); // The empty array [] means this runs only once
+
+  // Function to reset all state for a new game
+  const resetGame = () => {
+    setPlayer(null);
+    setOpponent(null);
+    setGameId(null);
+    setBoard(Array(9).fill(null));
+    setIsMyTurn(false);
+    setWinner(null);
+    playerSymbolRef.current = null;
+    setGameState('nickname'); // Go back to home screen
+  };
 
   // This function is passed down to NicknameScreen
   const handleFindGame = (nickname) => {
@@ -96,22 +113,36 @@ function App() {
     }
   };
 
+  const handlePlayAgain = () => {
+    resetGame();
+  };
+
+  const handleViewLeaderboard = () => {
+    setGameState('leaderboard');
+  };
+
+  const handleBackToHome = () => {
+    setGameState('nickname');
+  };
+
   // This function decides which screen to show
   const renderGameScreen = () => {
     switch (gameState) {
       case 'nickname':
-        return <NicknameScreen onFindGame={handleFindGame} />;
+        // Pass the new handler to the nickname screen
+        return <NicknameScreen onFindGame={handleFindGame} onViewLeaderboard={handleViewLeaderboard} />;
+      case 'leaderboard':
+        // Pass the server URL and back handler
+        return <LeaderboardScreen serverUrl={SOCKET_SERVER_URL} onBack={handleBackToHome} />;
       case 'waiting':
         return <WaitingScreen />;
       case 'game':
-        return (
-          <Board 
-            board={board}
-            onSquareClick={handleSquareClick}
-          />
-        );
+        return <Board board={board} onSquareClick={handleSquareClick} />;
+      case 'gameOver':
+        // Pass the winner info and play again handler
+        return <GameOverScreen winner={winner} playerSymbol={player.symbol} onPlayAgain={handlePlayAgain} />;
       default:
-        return <NicknameScreen onFindGame={handleFindGame} />;
+        return <NicknameScreen onFindGame={handleFindGame} onViewLeaderboard={handleViewLeaderboard} />;
     }
   };
 
@@ -119,14 +150,6 @@ function App() {
   const renderGameInfo = () => {
     if (gameState !== 'game') return null;
 
-    if (winner) {
-      return (
-        <div className="game-info">
-          <h2>Winner: {winner}</h2>
-        </div>
-      );
-    }
-    
     return (
       <div className="game-info">
         <h3>You are: {player.symbol} ({player.nickname})</h3>

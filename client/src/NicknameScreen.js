@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 // This component takes one prop: a function to call when the user clicks "Continue"
-function NicknameScreen({ onFindGame }) {
+function NicknameScreen({ onFindGame, onViewLeaderboard }) {
   const [nickname, setNickname] = useState('');
 
   const handleSubmit = (e) => {
@@ -24,6 +24,12 @@ function NicknameScreen({ onFindGame }) {
         />
         <button type="submit">Continue</button>
       </form>
+      <button 
+        className="leaderboard-button" 
+        onClick={onViewLeaderboard}>
+        View Leaderboard
+      </button>
+
     </div>
   );
 }

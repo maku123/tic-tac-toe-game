@@ -1,10 +1,10 @@
 import io from "socket.io-client";
 import React, { useState, useEffect, useRef } from "react";
-import Board from "./Board";
-import NicknameScreen from './NicknameScreen';
-import WaitingScreen from './WaitingScreen';
-import GameOverScreen from './GameOverScreen';
-import LeaderboardScreen from './LeaderboardScreen';
+import Board from "./components/Board";
+import NicknameScreen from './components/NicknameScreen';
+import WaitingScreen from './components/WaitingScreen';
+import GameOverScreen from './components/GameOverScreen';
+import LeaderboardScreen from './components/LeaderboardScreen';
 
 // Define where our server is running
 const SOCKET_SERVER_URL = process.env.REACT_APP_SOCKET_SERVER_URL || "http://localhost:4000";

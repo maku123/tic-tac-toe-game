@@ -28,3 +28,35 @@ h1 {
   margin-bottom: 20px;
   font-size: 48px;
 }
+
+.game-board {
+  margin-top: 20px;
+}
+
+.board-row {
+  /* This makes the squares stack horizontally */
+  display: flex;
+}
+
+.square {
+  width: 100px;
+  height: 100px;
+  background: #3a3f4a;
+  border: 2px solid #61dafb; /* A 'React' blue color */
+  margin: -1px; /* This makes the borders overlap nicely */
+  
+  font-size: 60px;
+  font-weight: bold;
+  color: white;
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.square:hover {
+  background: #4a4f5a;
+}

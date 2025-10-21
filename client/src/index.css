@@ -72,6 +72,7 @@ h1 {
   justify-content: center;
   align-items: center;
   min-height: 400px; /* Give our container a fixed height */
+  flex-direction: column;
 }
 
 /* Nickname Screen */
@@ -119,4 +120,20 @@ h1 {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.game-info {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.game-info h2 {
+  font-size: 24px;
+  color: #61dafb; /* React blue */
+}
+
+.game-info h3 {
+  font-size: 18px;
+  font-weight: 300;
+  color: #ccc;
 }

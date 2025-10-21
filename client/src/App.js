@@ -1,5 +1,5 @@
 import io from "socket.io-client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Board from "./Board";
 import NicknameScreen from './NicknameScreen';
 import WaitingScreen from './WaitingScreen';
@@ -17,6 +17,13 @@ function App() {
   // State to store player info
   const [player, setPlayer] = useState(null); // Will be { symbol: 'X', nickname: '...' }
   const [opponent, setOpponent] = useState(null); // Will be { symbol: 'O', nickname: '...' }
+  const [gameId, setGameId] = useState(null);
+  const [board, setBoard] = useState(Array(9).fill(null));
+  const [isMyTurn, setIsMyTurn] = useState(false);
+  const [winner, setWinner] = useState(null);
+
+  // Create a ref to hold the player's symbol
+  const playerSymbolRef = useRef(null);
 
   // This 'useEffect' hook runs once when the component loads
   useEffect(() => {
@@ -27,27 +34,38 @@ function App() {
     setSocket(newSocket);
 
     // Set up a "connect" event listener
+    // We successfully connected
     newSocket.on("connect", () => {
       console.log(`Connected to server! Socket ID: ${newSocket.id}`);
     });
 
     // Listen for the "gameStarted" event from the server
-    newSocket.on('gameStarted', (data) => {
-      console.log('Game is starting!', data);
+    // Server told us the game has started
+    newSocket.on('gameStarted', (game) => {
+      console.log('Game is starting!', game);
       
-      // We are player 1 ('X')
-      if (data.player1.id === newSocket.id) {
-        setPlayer({ symbol: 'X', nickname: data.player1.nickname });
-        setOpponent({ symbol: 'O', nickname: data.player2.nickname });
-      } 
-      // We are player 2 ('O')
-      else {
-        setPlayer({ symbol: 'O', nickname: data.player2.nickname });
-        setOpponent({ symbol: 'X', nickname: data.player1.nickname });
-      }
+      setGameId(game.gameId);
+      setBoard(game.board);
       
-      // Switch to the game screen
+      // Determine if we are player 'X' or 'O'
+      const myPlayer = game.players.find(p => p.id === newSocket.id);
+      const otherPlayer = game.players.find(p => p.id !== newSocket.id);
+
+      // Store our symbol in the ref
+      playerSymbolRef.current = myPlayer.symbol;
+
+      setPlayer(myPlayer);
+      setOpponent(otherPlayer);
+      setIsMyTurn(game.turn === myPlayer.symbol); // Check if it's our turn
       setGameState('game');
+    });
+
+    // Server sent us an updated game state
+    newSocket.on('updateState', (game) => {
+      setBoard(game.board);
+      // Read from the ref, which is always up-to-date
+      setIsMyTurn(game.turn === playerSymbolRef.current);
+      setWinner(game.winner);
     });
 
     // Clean up the connection when the component unmounts
@@ -65,6 +83,19 @@ function App() {
     }
   };
 
+  // This function is passed down to Board.js
+  const handleSquareClick = (squareIndex) => {
+    // Check if it's our turn and the square is not already filled
+    if (isMyTurn && !board[squareIndex] && !winner) {
+      // Send the move to the server
+      socket.emit('makeMove', {
+        gameId: gameId,
+        squareIndex: squareIndex,
+        playerSymbol: player.symbol
+      });
+    }
+  };
+
   // This function decides which screen to show
   const renderGameScreen = () => {
     switch (gameState) {
@@ -73,17 +104,42 @@ function App() {
       case 'waiting':
         return <WaitingScreen />;
       case 'game':
-        // We'll pass all the info down to the Board soon
-        return <Board />; 
+        return (
+          <Board 
+            board={board}
+            onSquareClick={handleSquareClick}
+          />
+        );
       default:
         return <NicknameScreen onFindGame={handleFindGame} />;
     }
   };
 
+  // Show game info (who is who, turn, winner)
+  const renderGameInfo = () => {
+    if (gameState !== 'game') return null;
+
+    if (winner) {
+      return (
+        <div className="game-info">
+          <h2>Winner: {winner}</h2>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="game-info">
+        <h3>You are: {player.symbol} ({player.nickname})</h3>
+        <h3>Opponent: {opponent.symbol} ({opponent.nickname})</h3>
+        <h2>{isMyTurn ? "Your Turn" : `Waiting for ${opponent.symbol}...`}</h2>
+      </div>
+    );
+  };
+
   return (
     <div className="game">
-      {/* We'll remove this title soon, but it's fine for now */}
       <h1>Tic-Tac-Toe</h1>
+      {renderGameInfo()}
       <div className="game-container">
         {renderGameScreen()}
       </div>

@@ -6,7 +6,7 @@ This is a full-stack, server-authoritative multiplayer Tic-Tac-Toe game built fr
 
 ## 🚀 Live Demo
 
-* **Play the Game (Frontend):** `https://maku123-tic-tac-toe-game.netlify.app/`
+* **Play the Game (Frontend):** https://maku123-tic-tac-toe-game.netlify.app/
 * **View the Leaderboard API (Backend):** `https://[backend_url]/leaderboard`
 
 **Note:** The free-tier backend on Render will "spin down" after 15 minutes of inactivity. The *first* connection (when a player clicks "Find Game") may take 20-30 seconds as the server wakes up.
@@ -88,8 +88,7 @@ To run this project on your local machine, you will need **Node.js**, **npm**, a
 ### 2. Clone the Project
 
 ```bash
-# Replace with your own repository URL
-git clone [https://github.com/](https://github.com/)[maku123]/[tic-tac-toe-game].git
+git clone https://github.com/maku123/tic-tac-toe-game.git
 cd tic-tac-toe-game
 ```
 
@@ -112,13 +111,13 @@ echo. > .env
 
 # 4. Open the new .env file and add your MongoDB connection string
 # Make sure to replace <password> with the password you created!
-MONGODB_URI=mongodb+srv://game_user:<password>@your-cluster-url...
+MONGODB_URI=mongodb+srv://<username>:<password>@your-cluster-url...
 
 # 5. Start the server
 node index.js
 ```
 
-# ✅ Server is now running on http://localhost:4000
+✅ Server is now running on http://localhost:4000
 
 ### 4. Set Up & Run the Frontend
 
@@ -144,6 +143,7 @@ REACT_APP_SOCKET_SERVER_URL=http://localhost:4000
 npm start
 ```
 
-# ✅ Your browser will open to http://localhost:3000
-# You can now open a second localhost:3000 tab to simulate a second player and test the full matchmaking flow.
+✅ Your browser will open to http://localhost:3000
+
+You can now open a second localhost:3000 tab to simulate a second player and test the full matchmaking flow.
 
